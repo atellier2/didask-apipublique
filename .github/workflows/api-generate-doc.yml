@@ -15,6 +15,14 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}  # Utilise GITHUB_TOKEN pour les actions de commit/push
+          fetch-depth: 0  # Récupère tout l'historique pour permettre les commits
+
+      - name: Set up Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -29,4 +37,4 @@ jobs:
         run: |
           git add docs/index.html
           git commit -m "Mise à jour de la documentation API"
-          git push 
+          git push origin main
