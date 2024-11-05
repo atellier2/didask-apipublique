@@ -129,7 +129,7 @@
 
     version: "0.1.0"
   servers:
-    - url: https://trial.didask.com/api/v1/
+    - url: https://trial.didask.com/api/v1
       description: Serveur de démo
   security:
     - CookieAuth: []
@@ -137,18 +137,22 @@
     - name: Authentification
       description: Comment se connecter à Didask ?
     - name: Espace de travail
+      description: Actions sur les espaces de travail
       externalDocs:
         url: >-
           https://help.didask.com/fr/articles/9154880-comment-organiser-et-segmenter-ma-plateforme-par-espaces-de-formation
     - name: Groupe d'utilisateurs
+      description: Actions sur les groupes d'utilisateur
     - name: Utilisateur
       description: Gestion des utilisateurs de la plateforme Didask
     - name: Publication
+      description: Liste des publications et de l'avancement des apprenants
 
   paths:
     /users:
       get:
         summary: Liste des utilisateurs et leurs accès aux publications.
+        operationId: getUser
         description: >
           Cette API permet de lister les utilisateurs Didask en filtrant par nom ou email.
 
@@ -629,7 +633,7 @@
 
     /auth/login:
         servers:
-            - url: https://trial.didask.com/api/
+            - url: https://trial.didask.com/api
               description: Racine de l'API
         post:
           summary: Authentification 
@@ -1181,6 +1185,7 @@
                           type: string
                           example: "Nouveau nom"
                     error:  
+                      type: object
                       nullable: true
           '403':
             $ref: '#/components/responses/UnauthorizedError'
