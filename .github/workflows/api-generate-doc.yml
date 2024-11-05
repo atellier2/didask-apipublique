@@ -15,9 +15,7 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          persist-credentials: false  # Désactive les credentials par défaut pour les ajouter dans la prochaine étape
-          fetch-depth: 0  # Récupère tout l'historique du dépôt pour permettre les commits
+
 
       - name: Set up Git
         run: |
@@ -34,10 +32,7 @@ jobs:
         run: redocly build-docs spec.yaml -o ./docs/index.html
 
       - name: Commit and push changes
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git add docs/index.html
           git commit -m "Mise à jour de la documentation API"
-          git push "https://${GITHUB_TOKEN}@github.com/${{ github.repository }}.git" HEAD:main
-
+          git push 
