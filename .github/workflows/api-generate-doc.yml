@@ -1,5 +1,4 @@
-name: Generate API Documentation
-
+name: Génération et publication de la documentation 
 on:
   push:
     branches:
