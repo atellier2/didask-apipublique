@@ -30,10 +30,13 @@ jobs:
       - name: Install Redocly CLI
         run: npm install -g @redocly/cli@latest
 
-      - name: Generate API documentation
+      - name: Vérification de la syntaxe
+        run: redocly lint spec.yaml --format=github-actions
+        
+      - name: Génération de la documentation
         run: redocly build-docs spec.yaml -o ./docs/index.html
 
-      - name: Commit and push changes
+      - name: Mise en ligne de la documentation
         run: |
           git add docs/index.html
           git commit -m "Mise à jour de la documentation API"
