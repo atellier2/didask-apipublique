@@ -1,0 +1,1688 @@
+  openapi: 3.0.0
+  info:
+    title: Didask
+    description: |
+      # API Publique Didask
+
+      ## Introduction
+      L’API Didask vous permet de gérer l'organisation des utilisateurs de votre application.
+
+      Si vous souhaitez gérer les publications (=contenus pédagogiques), il est nécessaire de passer par le système SCORM également géré par Didask.
+
+
+
+      ## Documentation fonctionnelle
+
+      ### Espaces de travail
+      L’application Didask est organisée en espaces de travail.
+      Ces espaces permettent d'organiser les groupes d'utilisaturs, les publications, etc.
+
+      💡 L'espace de travail est un élément structurant de la plateforme Didask. Rapprochez vous de votre consultant Didask pour les utiliser à bon essient.
+
+      L'API vous permet de faire les principales opérations sur les espaces de travail que sont la consultation, la création, la modification et la suppression.
+
+      ### Publications
+
+      Les publications sont les contenus pédagogiques organisés qui sont mis à disposition des apprenants.
+
+      ### Groupe d'utilisateur
+
+      Les groupes d'utilisateur permettent de donner l'accès à certaines  publications à des utilisateur en définissant le rôle qu'ils jouent vis-à-vis de ces publications..
+
+      Les rôles possibles sont : 
+          - learner : apprenant
+          - coach : animateur
+          - author : concepteur
+          - admin : administrateur
+
+      Les groupes sont définis à l’intérieur d’un espace de travail et ne peuvent appartenir qu’à un seul espace de travail.
+
+      Deux groupes de travail ne peuvent pas avoir le même nom et ce, même s’ils sont dans deux espaces de travail différents.
+
+      Un groupe utliisateur peut avoir une date d'expiration qui est une date optionnelle à partir de laquelle les apprenants 
+      n'auront plus accès aux publications.
+
+      ### Utilisateurs
+
+      Un utilisateur peut appartenir à plusieurs espaces de travail mais il ne peut avoir le rôle d'apprenant que dans un seul espace de travail.
+
+      La clé d’unicité de l’utilisateur est donnée par son adresse mail. Il n’est pas possible de créer deux utilisateurs avec deux id différents et le même email.
+
+
+
+
+      ## Documentation technique
+
+      ### Authentification
+
+      L'authentification se fait à l'aide de l'API ```/login/auth```. 
+
+      Elle peut être réalisée par login/mot de passe ou via l'authentification SSO.
+
+      Dans les deux cas, l'API vous renverra un cookies  contenant 
+      la clé `sid`. Le cookie `sid` doit ensuite être inclus dans les requêtes pour accéder aux API.
+
+      ```
+      **Request Headers**
+      User-Agent: xxxxxxx
+      Cookie: sid=670e24927e3b774eff8bf73e
+      ...
+      ```
+
+      Cette authentification est valable 1 journée (24h).
+
+      ### Spécifications des API
+
+      En complément, une collection de test est disponible sur Postman.
+
+      ### Identifiants uniques
+      Chaque ressource (publication, utilisateur, groupe, espace, etc.) est identifiée de manière unique par un id qui est généré uniquement par Didask et qui est non modifiable. 
+      Cet ID est une chaîne de 12 octets (ou 24 caractères hexadécimaux).
+
+      > Exemple : ```ertab7234eb4vbnd2e943501```
+
+      ### Retour des API
+
+      La plus part des API retournent les informations sous le format suivant : 
+
+
+      ```json
+      {
+          // Données que vous avez demandées
+          "data": [
+              //Les données sont organisées en une liste  avec une
+              //ou plusieurs valeurs en fonction du type de demande.
+              {
+                  "cle": "valeur",
+                  "cle2": "valeur2",
+                  ...
+              }
+          ],
+
+          //Dans le cas où il y a une erreur, le bloc suivant sera retourné sinon 
+          //la clé error prendra la valeur **null**
+          "error": {
+              "id": "f1c8711f-0a0f-4869-8922-3f41f2e26d82",
+              "message": "Argument passed in must be a string of 12 bytes or a string of 24 hex characters or an integer",
+              "code": "error.unknown",
+              "status": 500,
+              "cause": {
+                  "message": "Complément d'informations"
+              }
+          }
+      }
+      ```
+
+      ### SCORM / Publications
+
+      Si vous souhaitez interfacer vos contenus pédagogiques, il sera nécessaire d'utiliser le SCORM. L'API 
+      publique ne permet pas de créer / modifier une publication.
+
+      ### Codes retour
+      De manière générale, les codes retours utilisés sont les codes standards : 
+
+      - 2XX : l'appel a réussi
+      - 500 : l'appel a échoué. C'est principalement le cas quand les données communiquées n'ont pas le bon format
+
+
+
+
+    version: "0.1.0"
+  servers:
+    - url: https://trial.didask.com/api/v1/
+      description: Serveur de démo
+  security:
+    - CookieAuth: []
+  tags:
+    - name: Authentification
+      description: Comment se connecter à Didask ?
+    - name: Espace de travail
+      externalDocs:
+        url: >-
+          https://help.didask.com/fr/articles/9154880-comment-organiser-et-segmenter-ma-plateforme-par-espaces-de-formation
+    - name: Groupe d'utilisateurs
+    - name: Utilisateur
+      description: Gestion des utilisateurs de la plateforme Didask
+    - name: Publication
+
+  paths:
+    /users:
+      get:
+        summary: Liste des utilisateurs et leurs accès aux publications.
+        description: >
+          Cette API permet de lister les utilisateurs Didask en filtrant par nom ou email.
+
+          Par défaut, seuls 10 utilisateurs sont retournés. Vous pouvez ajuster l'index de pagination pour accéder aux utilisateurs suivants.
+          Le nombre d'utilisateurs par page est paramétrable.
+
+          Pour chaque utilisateur, les informations détaillées ainsi que la liste des publications auxquelles il a accès sont renvoyées.
+
+          Note : Cette API est limitée à un seul espace de travail par appel.
+        parameters:
+          - in: query
+            name: limit
+            required: false
+            description: Nombre d'utilisateurs à retourner (0 = illimité). Par défaut, 10 utilisateurs sont retournés.
+            schema:
+              type: integer
+              default: 10
+            example: 10
+          - in: query
+            name: skip
+            required: false
+            description: Index du premier utilisateur à retourner pour la pagination (décalage).
+            schema:
+              type: integer
+              default: 0
+            example: 0
+          - in: query
+            name: spaceId
+            required: false
+            description: Filtrer par ID d'espace de travail. Si non renseigné, l'espace de travail par défaut est utilisé.
+            schema:
+              type: string
+            example: 65305dfc128086ef68c5d03f
+          - in: query
+            name: email
+            required: false
+            description: Filtrer par une partie de l'email ou du nom d'utilisateur.
+            schema:
+              type: string
+            example: dupont
+          - in: query
+            name: id
+            required: false
+            description: Filtrer sur l'ID de l'utilisateur
+            schema:
+              $ref: '#/components/schemas/DidaskId'
+            example: 65305dfc128086ef68c5d03f
+        tags:
+          - Utilisateur
+        responses:
+          '200':
+            description: Liste des utilisateurs correspondants aux critères de recherche.
+            headers:
+              Server:
+                  description: Information sur le serveur
+                  schema:
+                    type: string
+              Report-To:
+                  description: Politique de rapport des erreurs
+                  schema:
+                    type: string
+              Reporting-Endpoints:
+                  description: Points de terminaison de rapport d’erreurs
+                  schema:
+                    type: string
+              Nel:
+                  description: Politique de rapports de réseau
+                  schema:
+                    type: string
+              Connection:
+                  description: Statut de la connexion
+                  schema:
+                    type: string
+              Strict-Transport-Security:
+                  description: Politique de sécurité pour le transport strict
+                  schema:
+                    type: string
+              X-Content-Type-Options:
+                  description: Politique pour empêcher les types MIME incorrects
+                  schema:
+                    type: string
+              Version:
+                  description: Version de l'API ou de l'application
+                  schema:
+                    type: string
+              Etag:
+                  description: Tag d’entité utilisé pour la mise en cache
+                  schema:
+                    type: string
+              Content-Length:
+                  description: Longueur du contenu de la réponse
+                  schema:
+                    type: string
+              Vary:
+                  description: En-tête pour la négociation de contenu
+                  schema:
+                    type: string
+              Date:
+                  description: Date de la réponse
+                  schema:
+                    type: string
+              Via:
+                  description: Information de proxy ou de passerelle
+                  schema:
+                    type: string
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    data:
+                      type: array
+                      description: Liste des utilisateurs filtrés.
+                      items:
+                        $ref: '#/components/schemas/Utilisateur'
+                    totalUsers:
+                      type: integer
+                      description: Nombre total d'utilisateurs correspondant aux filtres appliqués.
+                      example: 225
+                    error:
+                      type: object
+                      description: Champ null, utilisé uniquement en cas d'erreur.
+                      nullable: true
+          '400':
+            description: Erreur lors de la recherche des utilisateurs.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    error:
+                      $ref: '#/components/schemas/Error'
+
+      post:
+        summary: Création d'un nouvel utilisateur
+        description: |
+          L'utilisateur sera ajouté à l'espace de travail par défaut si aucun `spacesIds` n'est spécifié.
+          
+          
+          Lors de sa création, l'utilisateur a automatiquement un rôle "apprenant" (Learner) qui lui est donné sur l'espace de travail de rattachement.
+
+
+          Soit on utilise l'identification par email/mot de passe, soit on utilise la connexion SSO via oidcIssuer et oidcSubject.
+        tags:
+          - Utilisateur
+        requestBody:
+          required: true
+          content:
+            application/x-www-form-urlencoded:
+              schema:
+                type: object
+                properties:
+                  email:
+                    type: string
+                    description: Email de l'utilisateur à créer
+                    example: "john.doe@example.com"
+                  password:
+                    type: string
+                    pattern: "^(?=.*[a-zA-Z])(?=.*\\d)[a-zA-Z-9]{8,}$"
+                    #quel pattern faut il respecter ?
+                    description: |
+                        Mot de passe en clair de l'utilisateur à créer.
+                        Il doit contenir 8 cractères minimum:  avec au moins une lettre et un chiffre
+                    example: "password123"
+                  firstName:
+                    type: string
+                    description: Prénom de l'utilisateur à créer
+                    example: "John"
+                  lastName:
+                    type: string
+                    description: Nom de famille de l'utilisateur à créer
+                    example: "Doe"
+                  spacesIds:
+                    type: array
+                    items:
+                        $ref: "#/components/schemas/DidaskId"
+                    description: >
+                        Liste d'ID des espaces de travail où l'utilisateur sera ajouté. Si aucun espace de travail 
+                        n'est fourni, l'utilisateur sera créé dans l'espace de travail par défaut.
+                    example: ["65305dfc128086ef68c5d03f"]
+                  oidcIssuer:
+                    type: string
+                    description: >
+                        Identifiant du fournisseur d'identité OpenID Connect (OIDC) qui a émis le jeton pour cet utilisateur.
+                    example: "https://example-oidc.com/"
+                  oidcSubject:
+                    type: string
+                    description: >
+                        Identifiant unique de l'utilisateur dans le cadre de l'authentification OpenID Connect (OIDC).
+                    example: "abcd1234"
+                  accessCode:
+                    type: string
+                    description: "Matricule ou code d'accès à la plateforme. (Mode d'authentification alternatif à l'email/password)"
+                    example: "moncode23154"
+        responses:
+          '200':
+            description: Utilisateur créé avec succès
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    data:
+                      $ref: '#/components/schemas/Utilisateur'
+                    error:
+                      type: object
+                      nullable: true
+                      description: Null lorsque la création a réussie
+          '400':
+              description: Erreur lors de la création de l'utilisateur.
+              content:
+                application/json:
+                  schema:
+                    type: object
+                    properties:
+                      error: 
+                        $ref: '#/components/schemas/Error'
+          '500':
+              description: |
+                  Erreur lors de la création de l'utilisateur.
+
+                  Les causes possibles sont : 
+                    - Les données fournies n'ont pas le format demandé. (Exemple : mot de passe qui n'a pas la bonne syntaxe)
+                    - Un utilisateur avec cet email existe déjà.
+              content:
+                application/json:
+                  schema:
+                    type: object
+                    properties:
+                      error: 
+                        $ref: '#/components/schemas/Error'
+
+    /users/{userId}:
+      get:
+        #FIXME : deprecated: true
+        #FIXME : il serait préférable de passer via l'API Get /Users avec userid en paramètre
+        tags:
+          - Utilisateur
+        summary: 
+          Récupère un utilisateur spécifique par son ID
+        parameters:
+          - in: path
+            name: userId
+            schema:
+              type: string
+            required: true
+            description: ID de l'utilisateur
+        responses:
+          '200':
+            description: Fiche détaillée de l'utilisateur.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Utilisateur'
+      put:
+        summary: Mettre à jour un utilisateur spécifique
+        description: Met à jour les informations d'un utilisateur spécifique par son ID.
+        tags:
+            - Utilisateur
+        parameters:
+        - in: path
+          name: userId
+          schema:
+            type: string
+          required: true
+          description: ID de l'utilisateur
+        requestBody:
+          content:
+            application/x-www-form-urlencoded:
+                schema:
+                  type: object
+                  properties:
+                    email:
+                      type: string
+                      description: Email de l'utilisateur
+                      example: "john.doe@example.com"
+                    firstName:
+                      type: string
+                      description: Prénom de l'utilisateur
+                      example: "John"
+                    lastName:
+                      type: string
+                      description: Nom de famille de l'utilisateur
+                      example: "Doe"
+                    isStandard:
+                      type: boolean
+                      deprecated: true
+                      description: Spécifie si l'utilisateur est un utilisateur standard
+                      example: true
+        responses:
+          '200':
+              description: Fiche de l'utilisateur avec les nouvelles données mises à jour
+              content:
+                application/json:
+                  schema:
+                    $ref: '#/components/schemas/Utilisateur'
+        
+    /users/{userId}/account-availability:
+      put:
+        summary: Mettre à jour la disponibilité d'un utilisateur.
+        description: |
+                Cette API peut être utilisée pour activer ou désactiver un Utilisateur
+
+                Lorsqu'un utilisateur est désactivé, la date ``disabledDate`` est mise à jour automatiquement.
+                De même, lorsqu'un utilisateur est réactivé, la date ``disabledDate` est réinitialisée.
+
+                🚨 Lorsqu'un utilisateur est désactivé, il est supprimé de tous les groupes auxquels il appartient et lors de sa réactivation
+                il reste sans groupe.
+
+                Remarque : si vous atteignez le nombre maximal de licence pour votre organisation, vous aurez une erreur 403.
+        tags:
+          - Utilisateur
+        parameters:
+          - in: path
+            name: userId
+            required: true
+            description: "ID de l'utilisateur"
+            schema:
+                $ref: '#/components/schemas/DidaskId'
+
+        requestBody:
+          content:
+            application/x-www-form-urlencoded:
+              schema:
+                type: object
+                properties:
+                  disable:
+                    type: boolean
+                    description: Est ce que l'utilisateur doit être désactivé (true) ou non (false)
+                    example: true
+        responses:
+          '200':
+              description: Fiche de l'utilisateur avec les nouvelles données mises à jour
+              content:
+                application/json:
+                  schema:
+                    $ref: '#/components/schemas/Utilisateur'
+          '403':
+              description: |
+                        Erreur de lors de l'activation de l'utilisateur. 
+
+                        Vérifiez que vous n'avez pas atteint le nombre maximal d'utilisateurs pour votre organisation
+                    
+
+    /publications:
+      get:
+        summary: Liste des publications
+        description: |
+          Cette API vous permet d'avoir la liste des publications disponibles.
+
+          Pour chaque publication est également accessible la liste des utilisateurs et
+          celle des groupes y ayant accès.
+        tags:
+          - Publication
+        security:
+          - CookieAuth: []
+        responses:
+          '200':
+            description: Liste de toutes les publications
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    data:
+                      type: array
+                      description: Tableau de publications
+                      items:
+                        $ref: '#/components/schemas/Publication'
+
+    /publications/{publicationId}:
+      get:
+        summary: Récupérer une publication spécifique
+        description: Récupère les informations d'une publication spécifique par son ID.
+        tags:
+          - Publication
+        parameters:
+          - in: path
+            name: publicationId
+            description: Id de la publication que l'on souhaite consulter
+            required: true
+            schema:
+              $ref: '#/components/schemas/DidaskId'
+            example: "ussd97115800497115800g20"
+        responses:
+          '200':
+            description: Informations sur une publication spécifique
+            content:
+                application/json:
+                    schema:
+                        $ref: '#/components/schemas/Publication'   
+          '404':
+            description: La publication n'existe pas
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    error:
+                      type: string
+                      #FIXME : Modifier le format de réponse pour utiliser le format d'erreur par défaut
+                      example: Publication not found
+          '500':
+            description: |
+              Erreur lors de la recherche de la publication."
+
+              Cette erreur se produit lorsque l'ID n'a pas le bon format.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    error:
+                      type: string
+                      #FIXME : Modifier le format de réponse pour utiliser le format d'erreur par défaut
+                      example: Internal server error
+
+    /users/invite:
+      post:
+        summary: Envoyer une invitation pour une publication à un utilisateur
+        #FIXME : Je n'ai pas réussi à faire fonctionner cette API.
+        # Quels sont les prérequis techniques ?
+        description: >
+          Envoie une invitation par email à 
+          un utilisateur pour accéder à une publication.
+        #IDEA : Avoir une API api/v1/publications/invite qui envoie aux apprenants qui n'ont pas terminé leur publication sans avoir à lister tous les mails
+        #FIXME : Vérifier que les mails appartiennent à des utilisateurs qui ont accès à la publication ?
+        tags:
+          - Utilisateur
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  emails:
+                    type: array
+                    description: Liste des emails auxquels il faut envoyer l'invitation
+                    items:
+                      type: string
+                    example: ["user@example.com"]
+                  message:
+                    type: string
+                    description: texte sans formatage qui va être envoyé aux utilisateurs.
+                    #FIXME : interdire les formattage
+                    example: "Vous êtes invité à rejoindre la publication."
+                  courseId:
+                    #FIXME : Utiliser PublicationId comme dans les autres API ?
+                    type: string
+                    description: Identifiant de la publication pour laquelle l'apprenant va être invitée.
+                    example: "ussd97115800497115800g20"
+                  locale:
+                    type: string
+                    description: code de la langue du mail d'invitation.
+                    enum:
+                      - en
+                      - cs
+                      - de
+                      - es
+                      - fr
+                      - it
+                      - ja
+                      - nl
+                      - pl
+                      - zh
+                      - ar
+                      - ru
+                      - pt
+                      - tr
+                      - uk
+                      - ro
+                      - vi
+                    example: "fr"
+        responses:
+          '200':
+            description: Invitation envoyée avec succès
+
+    /auth/login:
+        servers:
+            - url: https://trial.didask.com/api/
+              description: Racine de l'API
+        post:
+          summary: Authentification 
+          tags:
+          - Authentification
+          description: >
+            - Appelez l'endpoint POST d'authentification de cette API avec votre email et mot de passe 
+            de la plateforme Didask.
+            
+            - Vous obtiendrez la valeur d'un cookie appelé sid (identifiant de session) dans les en-têtes de la réponse.
+            Ensuite, 
+            - Ajoutez le sid récupéré en tant que 'Cookie sid=' dans l'en-tête de toute requête que vous souhaitez envoyer à cette API publique.
+
+
+            ℹ️ Notez que seuls les utilisateurs ayant le rôle d'enseignant peuvent utiliser cette API.
+
+            ATTENTION : cette API est la seule qui ne prend pas comme racine l'URL ``/api/v1`` mais directement ``auth/login``.
+          requestBody:
+            required: true
+            content:
+              application/x-www-form-urlencoded:
+                schema:
+                  type: object
+                  properties:
+                    email:
+                      type: string
+                      description: Email de l'utilisateur de connexion
+                      example: user@example.com
+                    password:
+                      type: string
+                      description: Mot de passe de l'utilisateur
+                      example: userpassword
+                    strategy:
+                      type: string
+                      description: Stratégie d'authentification (ex. "emailPassword")
+                      # FIXME n'utiliser que la stratégie emailPassword
+                      
+                      example: emailPassword
+                
+          responses:
+            '200':
+              description: Connexion réussie, un cookie `sid` est renvoyé.
+              headers:
+                Set-Cookie:
+                  description: Cookie de session contenant `sid`.
+                  schema:
+                    type: string
+              content:
+                application/json:
+                  schema:
+                    type: object
+                    example: {}
+            '400':
+              description: Connexion échouée. Les identifiant ne sont pas les bons
+              content:
+                application/json:
+                  schema:
+                    type: object
+                    example: {}
+
+            '403':
+              $ref: '#/components/responses/UnauthorizedError'
+    /groups:
+      get:
+        summary: Liste des groupes d'utilisateurs
+        tags:
+          - Groupe d'utilisateurs
+        description: >
+          Récupère la liste de tous les groupes de tous les espaces de travail.
+
+          Il est possible de filtrer sur tout ou partie du nom.
+        security:
+          - CookieAuth: []
+        parameters:
+          - in: query
+            name: name
+            required: false
+            schema:
+              type: string
+            example: compta
+            description: >
+              Texte à rechercher dans le nom des groupes d'utilisateurs.
+
+
+              Le texte n'est pas sensible à la casse. ```compta``` permettra de retrouver les groupes "Comptabilité, Compta, Servcice comptable, ...."
+        responses:
+          '200':
+            description: Liste des groupes
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/Group'
+                    error:
+                      $ref: '#/components/schemas/ErrorNull'
+          '403':
+            $ref: '#/components/responses/UnauthorizedError'
+
+      post:
+        summary: Créer un nouveau groupe utilisateur
+        tags:
+          - Groupe d'utilisateurs
+        description: >
+          Crée un nouveau groupe avec les informations fournies dans le corps de la requête.
+
+        #FIXME : Comment fait-on pour définir l'espace de travail auquel rattacher le groupe ?
+        requestBody:
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - name
+                properties:
+                  name:
+                    type: string
+                    example: "Nouveau groupe"
+                    description: "Nom du groupe d'utilisateurs. Attention ce nom doit être unique"
+                  trainingSpace:
+                    #FIXME : on utilise parfois trainingSpace et parfois SpaceID. Rendre obsolete ce paramètre et ajoutre SpaceID
+                    type: string
+                    example: "65305dfc128086ef68c5d03f"
+                    description: >
+                      Espace de travail auquel rattacher le groupe à créer. 
+                      S'il n'est pas défini, c'est l'espace de travail par défaut qui sera utilisé.
+                  expirationDate:
+                    type: string
+                    example: "2023-12-31"
+                    #FIXME : quel est le format à utiliser pour la date ? Je n'y arrive pas.
+                    # J’ai découvert un bug suite à ta remarque, actuellement il faut passer un objet Date (new Date()) uniquement. Petite modification à faire pour accepter les formats 2023-01-10T00:00:00.000Z, 2023-01-10, 1/10/23 1/10/23 et new Date()
+                    description: "Date à partir de laquelle les publications ne seront plus visibles pour les apprenants"
+                    
+        responses:
+          '200':
+            description: Groupe créé avec succès
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    data:
+                      $ref: '#/components/schemas/GroupDetail'
+                      #FIXME : Il y a une erreur sur l’api qui retourne ce format, on retourne le document brut qui provient de la DB alors qu’il devrait être formaté => Passer sur le modèle Group
+                    error:
+                      $ref: '#/components/schemas/ErrorNull'
+          '400':
+            description: Erreur lors de la création du groupe d'utilisateur. L
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    error:
+                      $ref: '#/components/schemas/Error'
+          '403':
+            $ref: '#/components/responses/UnauthorizedError'
+
+    
+    /groups/{groupId}:
+      get:
+        summary: Détail d'un groupe d'utilisateurs
+        tags:
+          - Groupe d'utilisateurs
+        description: >
+          Récupère les informations d'un groupe spécifique en utilisant son ID.
+
+          Si le groupe n'est pas retrouvé, l'API renvoie un objet vide.
+        parameters:
+          - in: path
+            name: groupId
+            required: true
+            schema:
+              $ref: '#/components/schemas/DidaskId'
+            description: ID du groupe à récupérer
+        responses:
+          '200':
+            description: Informations sur le groupe
+            content:
+              application/json:
+                #TODO ourquoi ne pas garder le format détaillé en sortie ? On n'a pas beaucoup de détail
+                schema:
+                  type: object
+                  nullable: true
+                  properties:
+                    data:
+                      $ref: '#/components/schemas/Group'
+                        
+                #FIXME : Mettre à jour le format de sortie pour mettre l'error à null comme dans les autres appels
+                        
+          '403':
+            $ref: '#/components/responses/UnauthorizedError'
+          # FIXME : quand on recherche un groupe qui n'existe pas, on a un code retour 200 
+          # avec une réponse null. Pourquoi ne pas faire un code retour 404 ? 
+
+      put:
+        summary: Modifier un groupe utilisateur
+        description: >
+          L'API propose de pouvoir modifier le nom et la date d'expiration d'un groupe utilisateur.
+
+          Si l'on souhaite supprimer la date d'expiration il suffit d'envoyer une date vide.
+        tags:
+          - Groupe d'utilisateurs
+        
+        parameters:
+          - in: path
+            name: groupId
+            required: true
+            schema:
+              type: string
+            description: ID du groupe à mettre à jour
+
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - name
+                properties:
+                  name:
+                    type: string
+                    example: "Nouveau nom"
+                  expirationDate:
+                    type: string
+                    description: date à partir de laquelle les apprenants n'auront plus accès aux publications du groupe.
+                    example: "2023-12-31"
+        responses:
+          '200':
+            description: Groupe mis à jour avec succès
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    data:
+                      $ref: "#/components/schemas/GroupDetail"
+                      #FIXME : Il y a une erreur sur l’api qui retourne ce format, on retourne le document brut qui provient de la DB alors qu’il devrait être formaté => Passer sur le modèle Group
+          '403':
+            $ref: '#/components/responses/UnauthorizedError'
+
+      delete:
+        summary: Supprimer un groupe utilisateur
+        tags:
+          - Groupe d'utilisateurs
+        description: >
+          Supprime un groupe un groupe utilisateur à partir de son ID.
+
+
+          🚨 Le groupe est supprimé même s'il a des utilisateurs et des publications ! 🚨
+        parameters:
+          - in: path
+            name: groupId
+            required: true
+            schema:
+              type: string
+            description: ID du groupe à supprimer
+        responses:
+          '204':
+            description: Groupe supprimé avec succès
+            content: {}
+          '403':
+            $ref: '#/components/responses/UnauthorizedError'
+          #FIXME : Si le groupe à supprimer n'existe pas on a un retour 204 comme si tout était ok. IL faudrait ajouter une erreur 404
+
+    
+
+    /groups/{groupId}/users/{userId}:
+      put:
+        summary: Ajouter un utilisateur (apprenant) à un groupe.
+        description: >
+          Cette API permet d'ajouter un utilisateur à un groupe. Cet utilisateur aura obligatoirement le rôle d'apprenant.
+          
+
+          Il n'est pas possible d'ajouter un utilisateur avec un autre rôle.
+        tags:
+          - Groupe d'utilisateurs
+          - Utilisateur
+        parameters:
+          - in: path
+            name: groupId
+            required: true
+            example: 6661758bc1ec3600177f42d1
+            schema:
+              $ref: '#/components/schemas/DidaskId'
+            description: ID du groupe
+          - in: path
+            name: userId
+            example: 6661758bc1ec3600177f42d1
+            required: true
+            schema:
+              $ref: '#/components/schemas/DidaskId'
+            description: ID de l'utilisateur
+        responses:
+          '204':
+            description: L'utilisateur a correctement été ajouté au groupe d'utilisateurs.
+            content: {}
+            #FIXME : si l'on utilise des ID correctement formatés mais qui n'existent pas 
+            # on n'a aucune info sur le fait que cela n'a pas fonctionné
+            # => Ajouter une nouvelle réponse
+          '500':
+            description: >
+              Les ID communiqués ne sont pas de la bonne forme.
+              
+
+              le code renvoyé sera ```error.unknown```
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    data: 
+                      type: object
+                      nullable: true
+                      description: Aucune valeur ne sera retournée
+                      example: null
+                    error:
+                      $ref: '#/components/schemas/Error'
+      delete:
+        summary: Supprimer un utilisateur d'un groupe
+        description: >
+          Supprime un utilisateur d'un groupe spécifié. 
+        tags:
+          - Groupe d'utilisateurs
+        parameters:
+          - in: path
+            name: groupId
+            required: true
+            schema:
+              type: string
+            description: ID du groupe
+          - in: path
+            name: userId
+            required: true
+            schema:
+              type: string
+            description: ID de l'utilisateur
+        responses:
+          '204':
+            description: Utilisateur supprimé du groupe
+          '403':
+            $ref: '#/components/responses/UnauthorizedError'
+          '404':
+            description: Groupe ou utilisateur non trouvé
+
+    /spaces:
+      get:
+        summary: Liste des espaces de travail
+        description: >
+          Récupère la liste de tous les espaces (teams). 
+        tags:
+          - Espace de travail
+        security:
+          - CookieAuth: []
+        responses:
+          '200':
+            description: Liste des espaces de travail
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    data:
+                      type: array
+                      description: liste des espaces de travail
+                      items:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                            description: libellé de l'espace de travail
+                            example: "Espace par défaut"
+                          id:
+                            $ref: "#/components/schemas/DidaskId"
+                    error:
+                      type: object
+                      description: code erreur / null si aucune erreur.
+                      example: null
+                      nullable: true
+          '403':
+            $ref: '#/components/responses/UnauthorizedError'
+
+      post:
+        tags:
+          - Espace de travail
+        summary: Créer un nouvel espace
+        description: >
+          L'API crée un nouvel espace de travail avec les informations fournies dans le corps de la requête. 
+
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - name
+                properties:
+                  name:
+                    type: string
+                    description: nom de l'espace de travail
+                    example: "Espace n°3"
+        responses:
+          '200':
+            description: Espace créé avec succès
+            content:
+              application/json:
+                schema:
+                  type: object
+                  additionalProperties: false
+                  properties:
+                    data:
+                      type: object
+                      additionalProperties: false
+                      properties:
+                        name:
+                          type: string
+                          example: "Espace n°3"
+                          description: Nom du groupe créé
+                        id:
+                          $ref: "#/components/schemas/DidaskId"
+                    error:
+                      nullable: true
+                      type: object
+                      $ref: '#/components/schemas/Error'
+          '403':
+            $ref: '#/components/responses/UnauthorizedError'
+
+
+    /spaces/{spaceId}:
+      get:
+        summary: Détail d'un espace de travail.
+        tags:
+          - Espace de travail
+        security:
+          - CookieAuth: []
+        parameters:
+          - in: path
+            name: spaceId
+            description: Id de l'espace de travail que l'on recherche.
+            required: true
+            schema:
+              $ref: '#/components/schemas/DidaskId'
+        responses:
+          '200':
+            description: Informations sur l'espace
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    data:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          description: Identifiant unique de l'espace de travail
+                          example: "652d106cc882d704c06cb75e"
+                        name:
+                          type: string
+                          description: Nom de l'espace de travail.
+                          example: "Espace par défaut"
+                    error:
+                      type: object
+                      description: Null car il n'y a pas d'erreur
+                      nullable: true
+                      example: null
+          '403':
+            $ref: '#/components/responses/UnauthorizedError'
+          '404':
+            description: >
+              l'espace de travail demandé n'existe pas.
+
+              Le code erreur sera ``document.not_found`` 
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    data: 
+                      type: object
+                      nullable: true
+                      description: Aucune valeur ne sera retournée
+                      example: null
+                    error:
+                      $ref: '#/components/schemas/Error'
+          '500':
+            description: |
+              Erreur lors de la recherche de l'espace de travail. 
+              
+              
+              Cela se produit nottament lorsque l'id demandé n'est pas une chaine de 24 caractères hexa.
+
+
+              Le code erreur sera ``error.unknown``
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    data:
+                      type: object
+                      description: Le champ data est null
+                      example: null
+                    error:
+                      $ref: '#/components/schemas/Error'
+      put:
+        summary: Mise à jour d'un espace de travail
+        tags:
+          - Espace de travail
+        description: >
+          Met à jour les informations d'un espace existant. 
+        parameters:
+          - in: path
+            name: spaceId
+            required: true
+            schema:
+              type: string
+            description: ID de l'espace à mettre à jour
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    example: "Nouveau nom"
+        responses:
+          '200':
+            description: Espace mis à jour avec succès
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    data:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          example: "6617fbe0d11a56b2686c9e6b"
+                        name:
+                          type: string
+                          example: "Nouveau nom"
+                    error:  
+                      nullable: true
+          '403':
+            $ref: '#/components/responses/UnauthorizedError'
+
+      delete:
+        summary: Suppression d'un espace de travail
+        tags:
+          - Espace de travail
+        description: >
+          Supprime un espace existant par son ID. 
+
+          La suppression n'est possible que si l'espace de travail est vide. Dans le cas contraire, un code retour 500 sera renvoyé.
+        parameters:
+          - in: path
+            name: spaceId
+            required: true
+            schema:
+              type: string
+            description: ID de l'espace à supprimer
+        responses:
+          '200':
+            description: Espace supprimé avec succès
+            content:
+              application/json:
+                schema:
+                  type: object
+                  additionalProperties: false
+                  properties:
+                    error:
+                      type: string
+                      nullable: true
+                      example: null
+          '403':
+            $ref: '#/components/responses/UnauthorizedError'
+          '404':
+            description: Espace non trouvé
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
+          '500':
+            description: L'espace de travail n'est pas vide, la suppression a échoué.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
+
+    /publications/{publicationId}/users/{userId}/progression:
+      get:
+        summary: Récupérer la progression détaillée d'un apprenant sur une publication
+        description: Récupère la progression détaillée d'un utilisateur pour une publication spécifique.
+        tags:
+          - Publication
+          - Utilisateur
+        parameters:
+          - in: path
+            name: publicationId
+            required: true
+            schema:
+              type: string
+              pattern: "^[a-fA-F0-9]{24}$"
+            example: "623f311123438e114fvbcb31"
+          - in: path
+            name: userId
+            required: true
+            schema:
+              type: string
+              pattern: "^[a-fA-F0-9]{24}$"
+            example: "123431123443abcd4fab1231"
+
+        responses:
+          '200':
+            description: Progression détaillée de l'utilisateur pour la publication
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    data:
+                      type: object
+                      properties:
+                        evaluationScore:
+                          type: integer
+                          nullable: true
+                          example: null
+                        sessionDuration:
+                          type: integer
+                          example: 40
+                        modules:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              duration:
+                                type: integer
+                                example: 10
+                              score:
+                                type: integer
+                                example: 100
+                        id:
+                          type: string
+                          pattern: "^[a-fA-F0-9]{24}$"
+                          example: "623f311123438e114fvbcb31"
+                        name:
+                          type: string
+                          example: "Publication name"
+                        dateStarted:
+                          type: string
+                          example: "2022-04-28 15:48"
+                        lastActivity:
+                          type: string
+                          example: "2022-04-29 07:13"
+                        completedModulesCount:
+                          type: integer
+                          example: 2
+                        completionPercentage:
+                          type: integer
+                          example: 50
+                        evaluationAttempts:
+                          type: integer
+                          example: 0
+                        email:
+                          type: string
+                          example: "razrtel.dunet@mator.com"
+                        first_name:
+                          type: string
+                          example: "Razrtel"
+                        last_name:
+                          type: string
+                          example: "Dunet"
+          '403':
+            $ref: '#/components/responses/UnauthorizedError'
+
+  components:
+    schemas:
+      Utilisateur:
+        type: object
+        properties:
+          data:
+            type: object
+            properties:
+              id:
+                type: string
+                description: Identifiant unique de l'utilisateur
+                example: 6310b7768493b1007f544763
+              email:
+                type: string
+                description: Email de l'utilisateur
+                example: "callentin@irtshdf.fr"
+              first_name:
+                type: string
+                description: Prénom de l'utilisateur
+                example: "cindy 2"
+              last_name:
+                type: string
+                description: Nom de famille de l'utilisateur
+                example: "allentin"
+              date_created:
+                type: string
+                format: date-time
+                description: Date de création de l'utilisateur au format ISO 8601
+                example: "2022-09-01T13:45:26.866Z"
+              date_updated:
+                type: string
+                format: date-time
+                description: Date de dernière mise à jour de l'utilisateur au format ISO 8601
+                example: "2024-10-08T15:37:38.247Z"
+              oidcIssuer:
+                type: string
+                description: >
+                    Identifiant du fournisseur d'identité OpenID Connect (OIDC) qui a émis le jeton pour cet utilisateur.
+                example: "https://example-oidc.com/"
+                nullable: true
+              oidcSubject:
+                type: string
+                description: >
+                    Identifiant unique de l'utilisateur dans le cadre de l'authentification OpenID Connect (OIDC).
+                example: "abcd1234"
+                nullable: true
+              accessCode:
+                type: string
+                description: Matricule ou code d'accès à la plateforme. (Mode d'authentification alternatif à l'email/password)
+                example: "moncode23154"
+                nullable: true
+              roles:
+                type: array
+                description: Liste des rôles de l'utilisateur
+                items:
+                  type: string
+                example: ["learner"]
+              groups:
+                type: array
+                description: Liste des groupes auxquels l'utilisateur appartient (vide s'il n'appartient à aucun groupe)
+                items:
+                  type: string
+                example: []
+              publications:
+                type: array
+                description: Liste des publications auxquelles l'utilisateur a accès
+                items:
+                  type: object
+                  properties:
+                    id:
+                      $ref: "#/components/schemas/DidaskId"
+                    name:
+                      type: string
+                      description: Nom de la publication
+                      example: "Apprendre à apprendre - Sciconum - Démo DD"
+                    progression:
+                      type: integer
+                      description: Progression de l'utilisateur dans la publication
+                      example: 0
+                    link:
+                      type: string
+                      description: Lien vers la publication
+                      example: "trial.didask.com/courses/apprendre-a-apprendre-sciconum-demo-dd?panel=introduction"
+              disabledDate:
+                type: string
+                format: date-time
+                nullable: true
+                description: Date à laquelle l'utilisateur a été désactivé (null si non désactivé).
+                example: null
+              preferredEmailingLanguage:
+                type: string
+                description: Langue préférée pour les emails
+                example: "fr"
+              isEmailConfirmed:
+                type: boolean
+                description: Indique si l'adresse e-mail de l'utilisateur est confirmée
+                example: true
+              lastSeen:
+                type: string
+                format: date-time
+                description: Date de dernière connexion de l'utilisateur au format ISO 8601
+                example: "2022-09-06T13:58:18.125Z"
+              plateformInvitationDates:
+                type: array
+                items:
+                  type: string
+                description: Liste des dates d'invitation de l'utilisateur
+                example: []
+              spacesIds:
+                type: array
+                description: Liste des ID des espaces associés à l'utilisateur
+                items:
+                  type: string
+                example: ["65305dfc128086ef68c5d03f"]
+              status:
+                type: string
+                enum: [standard, disabled, pending, invitation_sent, reactivated]
+                description: Status de l'utilisateur
+                example: "standard"
+      Publication:
+        type: object
+        properties:
+          id:
+            $ref: "#/components/schemas/DidaskId"
+          name:
+            type: string
+            description: Nom de la publication
+            example: "Management > La définition des objectifs"
+          link:
+            type: string
+            description: URL qui pointe vers la publication
+            example: "trial.didask.com/courses/management-definition-objectifs"
+          groups:
+            description: Liste des groupes auxquels la publication est associée.
+            type: array
+            items:
+              type: string
+            example:
+              - "641495c65218ca9148b4fb62"
+              - "653768e071920846a7052f6c"
+              - "62f612c505ebcd005e676b5a"
+          users:
+            type: array
+            description: Liste des utilisateurs ayant accès en tant qu'apprenant à cette publication.
+            items:
+              type: object
+              properties:
+                id:
+                  $ref: "#/components/schemas/DidaskId"
+                email:
+                  type: string
+                  example: "contact@didask.com"
+                  description: Mail de l'utilisateur
+                progression:
+                  type: integer
+                  example: 25
+                  description: Pourcentage d'avancement de l'utilisation dans la réalisation de la publication
+                  # COMMENT EST CALCULE LA PROGRESSSION
+            example:
+              - id: "59ad6eb0092bd0000b6c4402"
+                email: "contact@didask.com"
+                progression: 0
+              - id: "59ad6eb0092bd0000b6c4404"
+                email: "contact1@didask.com"
+                progression: 0
+              - id: "6461f5cc133343b32a894e6b"
+                email: "contact3@didask.com"
+                progression: 20
+          project:
+            type: object
+            description: Projet auquel la publication est rattachée.
+            additionalProperties: false
+            properties:
+              id:
+                $ref: '#/components/schemas/DidaskId'
+              name:
+                description: Nom du projet
+                type: string
+                example: "(Collection) Management"
+              locales:
+                description: |
+                  Un projet peut être traduis dans plusieurs langues (en, cs, de, es, fr, it, ja, nl, pl, zh, ar, ru, pt, tr, uk, ro, vi). 
+                  Cette propriété retourne les clés des langues dans lesquelles le projet est effectivement traduit.
+                type: array
+                items:
+                  type: string
+                example:
+                  - "fr"
+        additionalProperties: false
+      DidaskId:
+        oneOf:
+          - type: string
+            description: Chaîne hexadécimale de 12 octets (24 caractères hexadécimaux)
+            pattern: "^[0-9a-fA-F]{24}$"
+            example: "5f16fdf70abcf209d05f9d01"
+          - type: integer
+            description: Identifiant sous forme d'entier équivalent à 12 octets (96 bits)
+            example: 123456789012345678901234
+        description: |
+          Identifiant unique utilisé dans les objets Didask. 
+          
+          Il s'agit soit d'une chaîne hexadécimale de 12 octets, soit d'un entier de 96 bits
+        additionalProperties: false
+      Error:
+        type: object
+        description: format des messages d'erreur
+        nullable: true
+        properties:
+            id:
+                description: Identifiant unique de l'erreur
+                $ref: "#/components/schemas/DidaskId"
+            message:
+                type: string
+                description: Message détaillant l'erreur
+                example: "il y a une erreur ..."
+            code:
+                type: string
+                description: Code d'erreur spécifique
+                example: "domain.error_code"
+            status:
+                type: integer
+                description: Statut HTTP de l'erreur
+                example: 500
+            requestId:
+                type: string
+                format: uuid
+                description: Identifiant unique de la requête
+                example: "0380f404-440f-4586-8135-337fc7b18760"
+            cause:
+                type: object
+                description: Cause de l'erreur (vide par défaut)
+                example: {}
+        additionalProperties: false
+      ErrorNull:
+        type: string
+        description: Absence d'erreur
+        nullable: true
+        example: null
+        additionalProperties: false
+      Group:
+        type: object
+        description: >
+          Information de base sur le groupe de travail
+        properties:
+          id:
+            type: string
+            example: "670f64a6d3cd2e46ecd7775d"
+            pattern: "^[a-fA-F0-9]{24}$"
+            description: Identifiant unique du groupe d'utilisateurs
+          name:
+            type: string
+            example: "Service comptabilité"
+            description: Nom du groupe
+              
+      GroupDetail:
+        #FIXME : le GroupDetail ne devrait pas exister. C'est un retour de la base de donnée non formaté. 
+        # Le risque c'est que des clients utilisent des données de ce retour est faible car on ne l'utilise
+        # que comme résultat de la création et de la modification des groupes.
+        type: object
+        description: >
+          Détail du groupe utilisateur.
+        properties:
+          data:
+            type: object
+            properties:
+              _id:
+                #FIXME pourquoi y a t'il un underscore ?
+                type: string
+                example: "670f64a6d3cd2e46ecd7775d"
+                pattern: "^[a-fA-F0-9]{24}$"
+                description: Identifiant unique du groupe d'utilisateurs
+              name:
+                type: string
+                example: "Nouveau nom"
+                description: Nom du groupe
+              expirationDate:
+                type: string
+                nullable: true
+                example: null
+                description: Date à partir de laquelle les publications ne seront plus accessibles aux apprenants
+              users:
+                type: array
+                description: Liste des utilisateurs associés au groupe
+                items:
+                  type: string
+                example:
+                  - "670f651971c666b64d57a8d5"
+                  - "6661758bc1ec3600177f42d1"
+              publications:
+                type: array
+                description: Liste des publications accessibles pour les utilisateurs de ce groupe.
+                items:
+                  type: string
+                example:
+                  - "670f64507f4d95159cdd7ded"
+              programs:
+                type: array
+                description: Liste des programmes accessibles pour les utilisateurs de ce groupe.
+                deprecated: true
+                items:
+                  type: string
+                example: []
+              createdBy:
+                type: string
+                example: "6661758bc1ec3600177f42d1"
+                description: Identifiant de l'utilisateur qui a créé le groupe
+              editedBy:
+                type: string
+                example: "6661758bc1ec3600177f42d1"
+                description: Identifiant du dernier utilisateur qui a modifié le groupe
+              trainingSpace:
+                type: string
+                example: "670e75d78717971b4c7876d2"
+                description: Identifiant de l'espace de travail auquel le groupe est associé. Pour rappel, un groupe ne peut appartenir qu'à un espace de travail.
+              date_created:
+                type: string
+                format: date-time
+                description: Date de création du groupe
+                example: "2024-10-16T07:00:54.646Z"
+              date_updated:
+                type: string
+                format: date-time
+                description: date de dernière modification du groupe
+                example: "2024-10-18T09:25:57.656Z"
+              __v:
+                type: integer
+                #FIXME : A quoi cela correspond ?
+                example: 0
+
+
+
+    securitySchemes:
+      CookieAuth:
+        type: apiKey
+        in: cookie
+        name: sid
+        description: >
+          Pour s'authentifier, il faut d'abord se connecter via l'API d'authentification
+          qui renverra un cookie contenant la clé `sid`. Le cookie `sid` doit ensuite
+          être inclus dans les requêtes suivantes pour accéder aux points de terminaison protégés.
+
+        # TODO documenter la gestion par Token
+    responses:
+      UnauthorizedError:
+        description: Vous n'êtes pas authentifié. Cf. § sur l'authentification.
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                error:
+                  type: object
+                  properties:
+                    id:
+                      type: string 
+                      format: uuid
+                      example: "a5d95c14-d846-4966-9350-c5d66855242f"
+                      description: Identifiant unique de l'erreur
+                    message:
+                      type: string
+                      example: "You are not authorized to access this API"
+                    code:
+                      type: string
+                      example: "auth.not_allowed"
+                    requestId:
+                      type: string
+                      example: "9c9d84c6-1234-5678-90ab-cdef12345678"
+                      format: uuid
+                      description: Identifiant unique de la requête
+                    cause:
+                      type: object
+                      
