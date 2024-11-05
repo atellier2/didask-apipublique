@@ -3,7 +3,9 @@ name: Generate API Documentation
 on:
   push:
     branches:
-      - main  # Exécute le workflow à chaque push sur la branche main
+      - main  # Exécute le workflow uniquement sur la branche main
+    paths:
+      - spec.yaml  # Limite l'exécution aux modifications de spec.yaml
   workflow_dispatch:  # Permet d'exécuter manuellement le workflow
 
 jobs:
