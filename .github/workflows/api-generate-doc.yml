@@ -1,0 +1,31 @@
+name: Generate API Documentation
+
+on:
+  push:
+    branches:
+      - main  # Exécute le workflow à chaque push sur la branche main
+  workflow_dispatch:  # Permet d'exécuter manuellement le workflow
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+
+      - name: Install Redocly CLI
+        run: npm install -g @redocly/cli@latest
+
+      - name: Generate API documentation
+        run: redocly build-docs spec.yaml -o ./public/index.html
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
+          publish_branch: gh-pages
