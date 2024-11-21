@@ -11,55 +11,59 @@ info:
 
     ## Introduction
 
-    L’API Didask vous permet principalement de gérer l'organisation des utilisateurs de votre application Didask et de consulter l'avancement de l'apprentissage des apprenants.
+    L’API Didask vous permet principalement de 
+    
+    - gérer l'organisation des utilisateurs de votre application Didask
+    - consulter l'avancement de l'apprentissage des apprenants.
 
-    Si vous souhaitez gérer les publications (=contenus pédagogiques), il est nécessaire de passer par le système SCORM également géré par Didask. L'API publique ne sera pas la bonne solution.
+    Si vous souhaitez gérer le contenu des publications (=contenus pédagogiques),
+    il est nécessaire de passer par le système SCORM également géré par Didask. L'API publique ne sera pas adaptée.
 
     Exemple courant d'usage de l'API Publique : 
 
       - Création des utilisateurs
-      - récupération de l'avancement des l'apprentissage
+      - Récupération de l'avancement des apprentissages
       
-
     ## Documentation fonctionnelle
 
     ### Espaces de travail
-    L’application Didask est organisée en espaces de travail. Ces espaces permettent d'organiser les groupes d'utilisaturs, les publications, etc.
+    L’application Didask est organisée en espaces de travail. Ces espaces permettent d'organiser les groupes d'utilisateurs, les publications, etc.
 
-    > 💡 L'espace de travail est un élément structurant de la plateforme Didask. Rapprochez vous de votre consultant Didask pour les utiliser à bon essient.
+    > 💡 L'espace de travail est un élément structurant de la plateforme Didask. Rapprochez-vous de votre consultant Didask pour les utiliser à bon escient.
 
-    L'API vous permet de réaliser les principales opérations sur les espaces de travail (Consultation, création, modification et suppression).
+    L'[API](#tag/Espace-de-travail) vous permet de réaliser les principales opérations sur les espaces de travail (Consultation, création, modification et suppression).
 
     ### Publications
 
-    Les publications sont les contenus pédagogiques organisés qui sont mis à disposition des apprenants. 
+    Les publications sont les contenus pédagogiques mis à disposition des apprenants. 
 
-    L'API vous permet de les consulter mais pas de les modifier. Pour interfacer les publications, préférez l'utilisation du SCORM Connect
+    L'[API]((#tag/Publication)) vous permet de les consulter mais pas de les modifier. Pour interfacer les publications, préférez l'utilisation du SCORM Connect
 
     ### Groupe d'utilisateur
 
-    Les groupes d'utilisateur permettent de donner l'accès à certaines  publications à des utilisateur en définissant le rôle qu'ils jouent vis-à-vis de ces publications..
+    Les groupes d'utilisateur permettent de donner l'accès à certaines  publications à des utilisateur en définissant le rôle qu'ils jouent vis-à-vis de ces publications.
 
     Les rôles possibles sont : 
 
-        - learner : apprenant
-        - coach : animateur
-        - author : concepteur
-        - admin : administrateur
+      - ``learner`` : apprenant
+      - ``coach`` : animateur
+      - ``author`` : concepteur
+      - ``admin`` : administrateur
 
     Les groupes sont définis à l’intérieur d’un espace de travail et ne peuvent appartenir qu’à un seul espace de travail.
 
     Deux groupes de travail ne peuvent pas avoir le même nom et ce, même s’ils sont dans deux espaces de travail différents.
 
-    Un groupe utliisateur peut avoir une date d'expiration qui est une date optionnelle à partir de laquelle les apprenants 
+    Un groupe utilisateur peut avoir une date d'expiration qui est une date optionnelle à partir de laquelle les apprenants 
     n'auront plus accès aux publications.
+
+    L'[API](#tag/Groupe-d'utilisateurs) vous permet de réaliser les principales opérations de gestion des groupes d'utilisateur (création, modification, suppression, affectation d'utilisateurs).
 
     ### Utilisateurs
 
     Un utilisateur peut appartenir à plusieurs espaces de travail mais il ne peut avoir le rôle d'apprenant que dans un seul espace de travail.
 
-    La clé d’unicité de l’utilisateur est donnée par son adresse mail. Il n’est pas possible de créer deux utilisateurs avec deux id différents et le même email.
-
+    La clé d’unicité de l’utilisateur est donnée par son adresse email. Il n’est pas possible de créer deux utilisateurs avec deux id différents et le même email.
 
     ## Documentation technique
 
@@ -73,13 +77,13 @@ info:
 
     L'authentification se fait à l'aide de l'API ```votrenom.didaks.com/api/login/auth```. 
 
-    > 💡Nottez qu'il n'y a pas le ``v1`` dans l'URL
+    > 💡Notez qu'il n'y a pas le ``v1`` dans l'URL
 
     L'authentification peut être réalisée par login/mot de passe ou via l'authentification SSO.
 
     Seuls les utilisateurs ayant le rôle d'enseignant peuvent utiliser cette API.
 
-    Dans les deux cas, l'API vous renverra un cookies  contenant 
+    Dans les deux cas, l'API vous renverra un cookie  contenant 
     la clé `sid`. Le cookie `sid` doit ensuite être inclus dans les requêtes pour accéder aux API.
 
     ```
@@ -99,14 +103,14 @@ info:
 
     ### Retour des API
 
-    La plus part des API retournent les informations sous le format suivant : 
+    La plupart des API retournent les informations sous le format suivant : 
 
 
     ```json
     {
         // Données que vous avez demandées
         "data": [
-            //Les données sont organisées en une liste  avec une
+            //Les données sont organisées en une liste avec une
             //ou plusieurs valeurs en fonction du type de demande.
             {
                 "cle": "valeur",
@@ -116,7 +120,7 @@ info:
         ],
 
         //Dans le cas où il y a une erreur, le bloc suivant sera retourné sinon 
-        //la clé error prendra la valeur **null**
+        //la clé ``error`` prendra la valeur ``null``v
         "error": {
             "id": "f1c8711f-0a0f-4869-8922-3f41f2e26d82",
             "message": "Argument passed in must be a string of 12 bytes or a string of 24 hex characters or an integer",
@@ -137,7 +141,7 @@ info:
 
     ### Tests de l'API
 
-    Pour tester l'API, vous pouvez utiliser un outil tel que Postman ou curl. La spécification est librement téléchargeable (en haut de la page).
+    Pour tester l'API, vous pouvez utiliser un outil tel que Postman ou CURL. La spécification est librement téléchargeable (en haut de la page).
     Cette spécification peut être importée dans Postman (https://learning.postman.com/docs/getting-started/importing-and-exporting/importing-from-swagger/)
 
 
@@ -159,23 +163,21 @@ tags:
   - name: Utilisateur
     description: Gestion des utilisateurs de la plateforme Didask
   - name: Publication
-    description: Liste des publications et de l'avancement des apprenants
+    description: >-
+      Liste des publications et de l'avancement des apprenants. 
 
 paths:
   /users:
     get:
-      summary: Liste des utilisateurs et leurs accès aux publications.
+      summary: Liste des utilisateurs avec les publications auxquelles ils on accès.
       operationId: getUser
-      description: |
-        Cette API permet de lister les utilisateurs Didask en filtrant par ``nom`` ou email.
-
+      description: |-
+        Cette API permet de lister les utilisateurs Didask en filtrant sur différents paramètres (le nom, le matricule, l'email ...)
 
         Par défaut, seuls 10 utilisateurs sont retournés. Vous pouvez ajuster l'index de pagination pour accéder aux utilisateurs suivants.
         Le nombre d'utilisateurs par page est paramétrable.
 
-
         Pour chaque utilisateur, les informations détaillées ainsi que la liste des publications auxquelles il a accès sont renvoyées.
-
 
         Note : Cette API est limitée à un seul espace de travail par appel.
       parameters:
@@ -205,10 +207,16 @@ paths:
         - in: query
           name: email
           required: false
-          description: Filtrer par une partie de l'email ou du nom d'utilisateur.
+          description: Filtrer par une partie de l'email de l'utilisateur.
           schema:
             type: string
-          example: dupont
+          example: dupont@
+        - in: query
+          name: accessCode
+          required: false
+          description: Matricule de l'utilisateur
+          schema:
+            type: string
         - in: query
           name: id
           required: false
@@ -350,12 +358,16 @@ paths:
 
   /users/{userId}:
     get:
-      #FIXME : deprecated: true
-      #FIXME : il serait préférable de passer via l'API Get /Users avec userid en paramètre
+      
       tags:
         - Utilisateur
       summary: 
         Récupère un utilisateur spécifique par son ID
+      description: >
+       Récupère les informations détaillées d'un utilisateur spécifique par son ID.
+
+       > 🚨 Il est préférable de passer par l'[API ``GET /users?id=xxxxx``](#tag/Utilisateur/operation/getUser)
+      deprecated: true
       parameters:
         - in: path
           name: userId
@@ -612,13 +624,13 @@ paths:
           
           - Vous obtiendrez la valeur d'un cookie appelé sid (identifiant de session) dans les en-têtes de la réponse.
           Ensuite, 
-          - Ajoutez le sid récupéré en tant que 'Cookie sid=' dans l'en-tête de toute requête que vous souhaitez envoyer à cette API publique.
+          - Ajoutez le sid récupéré en tant que ``Cookie sid=`` dans l'en-tête de toute requête que vous souhaitez envoyer à cette API publique.
 
 
-          💡 Notez que seuls les utilisateurs ayant le rôle d'enseignant peuvent utiliser cette API.
+          >💡 Notez que seuls les utilisateurs ayant le rôle d'enseignant peuvent utiliser cette API.
 
 
-          🚨 : cette API est la seule qui ne prend pas comme racine l'URL ``/api/v1`` mais directement ``auth/login``.
+          >🚨 : cette API est la seule qui ne prend pas comme racine l'URL ``/api/v1`` mais directement ``auth/login``.
         requestBody:
           required: true
           content:
@@ -959,7 +971,7 @@ paths:
     get:
       summary: Liste des espaces de travail
       description: >
-        Récupère la liste de tous les espaces (teams). 
+        Cette API permet de récupèrer la liste de tous les espaces. 
       tags:
         - Espace de travail
       security:
@@ -1413,7 +1425,14 @@ components:
             status:
               type: string
               enum: [standard, disabled, pending, invitation_sent, reactivated]
-              description: Status de l'utilisateur
+              description: |
+                Status de l'utilisateur :
+
+                  - standard : utilisateur actif
+                  - disabled : utilisateur désactivé
+                  - pending : utilisateur en attente d'activation
+                  - invitation_sent : utilisateur a été invité à la plateforme
+                  - reactivated : utilisateur a été réactivé
               example: "standard"
     Publication:
       type: object
