@@ -8,24 +8,18 @@ info:
     url: https://didask.com
   description: |-
     # API Publique Didask
-
     ## Introduction
-
     L’API Didask vous permet principalement de 
-    
     - gérer l'organisation des utilisateurs de votre application Didask
     - consulter l'avancement de l'apprentissage des apprenants.
-
     Si vous souhaitez gérer le contenu des publications (=contenus pédagogiques),
     il est nécessaire de passer par le système SCORM également géré par Didask. L'API publique ne sera pas adaptée.
 
     Exemple courant d'usage de l'API Publique : 
-
       - Création des utilisateurs
       - Récupération de l'avancement des apprentissages
       
     ## Documentation fonctionnelle
-
     ### Espaces de travail
     L’application Didask est organisée en espaces de travail. Ces espaces permettent d'organiser les groupes d'utilisateurs, les publications, etc.
 
@@ -34,51 +28,33 @@ info:
     L'[API](#tag/Espace-de-travail) vous permet de réaliser les principales opérations sur les espaces de travail (Consultation, création, modification et suppression).
 
     ### Publications
-
     Les publications sont les contenus pédagogiques mis à disposition des apprenants. 
-
     L'[API]((#tag/Publication)) vous permet de les consulter mais pas de les modifier. Pour interfacer les publications, préférez l'utilisation du SCORM Connect
 
     ### Groupe d'utilisateur
-
     Les groupes d'utilisateur permettent de donner l'accès à certaines  publications à des utilisateur en définissant le rôle qu'ils jouent vis-à-vis de ces publications.
-
     Les rôles possibles sont : 
-
       - ``learner`` : apprenant
       - ``coach`` : animateur
       - ``author`` : concepteur
       - ``admin`` : administrateur
-
     Les groupes sont définis à l’intérieur d’un espace de travail et ne peuvent appartenir qu’à un seul espace de travail.
-
     Deux groupes de travail ne peuvent pas avoir le même nom et ce, même s’ils sont dans deux espaces de travail différents.
-
     Un groupe utilisateur peut avoir une date d'expiration qui est une date optionnelle à partir de laquelle les apprenants 
     n'auront plus accès aux publications.
-
     L'[API](#tag/Groupe-d'utilisateurs) vous permet de réaliser les principales opérations de gestion des groupes d'utilisateur (création, modification, suppression, affectation d'utilisateurs).
 
     ### Utilisateurs
-
     Un utilisateur peut appartenir à plusieurs espaces de travail mais il ne peut avoir le rôle d'apprenant que dans un seul espace de travail.
-
     La clé d’unicité de l’utilisateur est donnée par son adresse email. Il n’est pas possible de créer deux utilisateurs avec deux id différents et le même email.
 
     ## Documentation technique
-
     ### Environnement
-
     Dès lors que vous avez un environnement Didask vous avez accès à l'API publique.
-
     Cette API est disponible à l'adresse ```votrenom.didaks.com/api/v1```
-
     ### Authentification
-
     L'authentification se fait à l'aide de l'API ```votrenom.didaks.com/api/login/auth```. 
-
     > 💡Notez qu'il n'y a pas le ``v1`` dans l'URL
-
     L'authentification peut être réalisée par login/mot de passe ou via l'authentification SSO.
 
     Seuls les utilisateurs ayant le rôle d'enseignant peuvent utiliser cette API.
