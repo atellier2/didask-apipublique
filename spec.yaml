@@ -9,9 +9,10 @@ info:
   description: |-
     # API Publique Didask
     ## Introduction
-    L’API Didask vous permet principalement de 
+    L’API Didask vous permet principalement de :
     - gérer l'organisation des utilisateurs de votre application Didask
     - consulter l'avancement de l'apprentissage des apprenants.
+
     Si vous souhaitez gérer le contenu des publications (=contenus pédagogiques),
     il est nécessaire de passer par le système SCORM également géré par Didask. L'API publique ne sera pas adaptée.
 
@@ -38,10 +39,14 @@ info:
       - ``coach`` : animateur
       - ``author`` : concepteur
       - ``admin`` : administrateur
+    
     Les groupes sont définis à l’intérieur d’un espace de travail et ne peuvent appartenir qu’à un seul espace de travail.
+
     Deux groupes de travail ne peuvent pas avoir le même nom et ce, même s’ils sont dans deux espaces de travail différents.
+
     Un groupe utilisateur peut avoir une date d'expiration qui est une date optionnelle à partir de laquelle les apprenants 
     n'auront plus accès aux publications.
+
     L'[API](#tag/Groupe-d'utilisateurs) vous permet de réaliser les principales opérations de gestion des groupes d'utilisateur (création, modification, suppression, affectation d'utilisateurs).
 
     ### Utilisateurs
@@ -51,10 +56,13 @@ info:
     ## Documentation technique
     ### Environnement
     Dès lors que vous avez un environnement Didask vous avez accès à l'API publique.
+
     Cette API est disponible à l'adresse ```votrenom.didaks.com/api/v1```
     ### Authentification
     L'authentification se fait à l'aide de l'API ```votrenom.didaks.com/api/login/auth```. 
+
     > 💡Notez qu'il n'y a pas le ``v1`` dans l'URL
+    
     L'authentification peut être réalisée par login/mot de passe ou via l'authentification SSO.
 
     Seuls les utilisateurs ayant le rôle d'enseignant peuvent utiliser cette API.
