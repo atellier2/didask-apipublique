@@ -30,6 +30,7 @@ info:
 
     ### Publications
     Les publications sont les contenus pédagogiques mis à disposition des apprenants. 
+    
     L'[API]((#tag/Publication)) vous permet de les consulter mais pas de les modifier. Pour interfacer les publications, préférez l'utilisation du SCORM Connect
 
     ### Groupe d'utilisateur
