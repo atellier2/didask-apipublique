@@ -1236,60 +1236,83 @@ paths:
                   data:
                     type: object
                     properties:
+                      email:
+                        type: string
+                        example: "razrtel.dunet@mator.com"
+                        description: Email de l'apprenant
+                      first_name:
+                        type: string
+                        example: "Razrtel"
+                        description: Prénom de l'apprenant
+                        #Fixme : passzer en Camel case comme le reste
+                      last_name:
+                        type: string
+                        example: "Dunet"
+                        description: Nom de famille de l'apprenant
+                        #fixme : passer en camel case comme le reste
+                      dateStarted:
+                        type: string
+                        format: date-time
+                        nullable: true
+                        example: "2022-04-28 15:48"
+                        description: Date de début de réalisation de la publication par l'apprenant
+                      lastActivity:
+                        type: string
+                        format: date-time
+                        example: "2022-04-29 07:13"
+                        description: Date de dernière activité réalisée par l'apprenant sur la publication (Visualisation ou réalisation d'exercices)
+                      evaluationAttempts:
+                        type: integer
+                        example: 0
+                        description: Nombre d'essais effectués par l'apprenant pour valider la publication.
                       evaluationScore:
                         type: integer
                         nullable: true
                         example: null
                         description: Score obtenu 
-                      sessionDuration:
-                        type: integer
-                        example: 40
-                        description: Temps passé (en minutes) sur la publication par l'utilisateur.
+                      name:
+                        type: string
+                        example: "Publication name"
+                        description: Nom de la publication
                       modules:
                         type: array
                         items:
                           type: object
                           properties:
+                            name:
+                              type: object
+                              properties:
+                                fr:
+                                  type: string
+                                  description: Libellé du module en francais
+                                xx:
+                                  type: string
+                                  description: Libellé du module en xx (anglais, allemand, ...). N'existe que si la traduction a été réalisée
                             duration:
                               type: integer
                               example: 10
+                              description: Durée passée au total sur le module
                             score:
                               type: integer
                               example: 100
-                      id:
-                        type: string
-                        pattern: "^[a-fA-F0-9]{24}$"
-                        example: "623f311123438e114fvbcb31"
-                      name:
-                        type: string
-                        example: "Publication name"
-                      dateStarted:
-                        type: string
-                        example: "2022-04-28 15:48"
-                      lastActivity:
-                        type: string
-                        example: "2022-04-29 07:13"
+                              description: Score obtenu sur le module (Sur 100)
+                      sessionDuration:
+                        type: integer
+                        example: 40
+                        description: Temps passé (en minutes) sur la publication par l'utilisateur.
                       completedModulesCount:
                         type: integer
+                        description: Nombre de modules terminés
                         example: 2
                       completionPercentage:
                         type: integer
                         example: 50
-                        description: Pourcentage de réalisation de la publication.
-                      evaluationAttempts:
-                        type: integer
-                        example: 0
-                      email:
-                        type: string
-                        example: "razrtel.dunet@mator.com"
-                      first_name:
-                        type: string
-                        example: "Razrtel"
-                        #Fixme : passzer en Camel case comme le reste
-                      last_name:
-                        type: string
-                        example: "Dunet"
-                        #fixme : passer en camel case comme le reste
+                        description: Pourcentage de réalisation de la publication (= completedModulesCount / Nb de modules ).
+                      id:
+                        $ref: "#/components/schemas/DidaskId"
+                        description: Id de la publication.
+                        
+                        
         '403':
           $ref: '#/components/responses/UnauthorizedError'
 
